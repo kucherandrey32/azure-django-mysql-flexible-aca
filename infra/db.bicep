@@ -22,8 +22,8 @@ module dbserver 'core/database/mysql/flexibleserver.bicep' = {
       storageSizeGB: 20
     }
     version: '8.0.21'
-    adminName: dbserverUser
-    adminPassword: dbserverPassword
+    administratorLogin: dbserverUser
+    administratorLoginPassword: dbserverPassword
     databaseNames: [ dbserverDatabaseName ]
     allowAzureIPsFirewall: true
   }
