@@ -103,7 +103,7 @@ OPENCENSUS = {
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-db_options = {}
+db_options = {"ssl_mode": "REQUIRED"}
 
 DATABASES = {
     "default": {
