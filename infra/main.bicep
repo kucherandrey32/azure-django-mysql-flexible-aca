@@ -17,6 +17,8 @@ param dbserverPassword string
 @description('Secret Key')
 param secretKey string
 
+param webAppExists bool = false
+
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
 
@@ -68,21 +70,37 @@ module monitoring 'core/monitor/monitoring.bicep' = {
   }
 }
 
+// Container apps host (including container registry)
+module containerApps 'core/host/container-apps.bicep' = {
+  name: 'container-apps'
+  scope: resourceGroup
+  params: {
+    name: 'app'
+    location: location
+    containerAppsEnvironmentName: '${prefix}-containerapps-env'
+    containerRegistryName: '${replace(prefix, '-', '')}registry'
+    logAnalyticsWorkspaceName: monitoring.outputs.logAnalyticsWorkspaceName
+  }
+}
+
 // Web frontend
 module web 'web.bicep' = {
   name: 'web'
   scope: resourceGroup
   params: {
-    name: replace('${take(prefix, 19)}-appsvc', '--', '-')
+    name: replace('${take(prefix, 19)}-ca', '--', '-')
     location: location
     tags: tags
     applicationInsightsName: monitoring.outputs.applicationInsightsName
     keyVaultName: keyVault.outputs.name
-    appCommandLine: 'entrypoint.sh'
-    pythonVersion: '3.12'
+    identityName: '${prefix}-id-web'
+    containerAppsEnvironmentName: containerApps.outputs.environmentName
+    containerRegistryName: containerApps.outputs.registryName
+    exists: webAppExists
     dbserverDomainName: db.outputs.dbserverDomainName
     dbserverUser: db.outputs.dbserverUser
     dbserverDatabaseName: db.outputs.dbserverDatabaseName
+    dbserverPassword: dbserverPassword
   }
 }
 
@@ -109,6 +127,13 @@ module keyVaultSecrets './core/security/keyvault-secret.bicep' = [for secret in 
 }]
 
 output AZURE_LOCATION string = location
+output AZURE_CONTAINER_ENVIRONMENT_NAME string = containerApps.outputs.environmentName
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerApps.outputs.registryLoginServer
+output AZURE_CONTAINER_REGISTRY_NAME string = containerApps.outputs.registryName
+output SERVICE_WEB_IDENTITY_PRINCIPAL_ID string = web.outputs.SERVICE_WEB_IDENTITY_PRINCIPAL_ID
+output SERVICE_WEB_NAME string = web.outputs.SERVICE_WEB_NAME
+output SERVICE_WEB_URI string = web.outputs.SERVICE_WEB_URI
+output SERVICE_WEB_IMAGE_NAME string = web.outputs.SERVICE_WEB_IMAGE_NAME
 output AZURE_KEY_VAULT_ENDPOINT string = keyVault.outputs.endpoint
 output AZURE_KEY_VAULT_NAME string = keyVault.outputs.name
 output APPLICATIONINSIGHTS_NAME string = monitoring.outputs.applicationInsightsName
