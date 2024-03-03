@@ -62,6 +62,10 @@ module app 'core/host/container-app-upsert.bicep' = {
         secretRef: 'dbserver-password'
       }
       {
+        name: 'MYSQL_SSL'
+        value: 'REQUIRED'
+      }
+      {
         name: 'RUNNING_IN_PRODUCTION'
         value: 'true'
       }

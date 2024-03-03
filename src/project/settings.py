@@ -90,7 +90,10 @@ WSGI_APPLICATION = "project.wsgi.application"
 
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-db_options = {"ssl_mode": "REQUIRED"}
+db_options = {}
+
+if ssl_mode := os.environ.get("MYSQL_SSL"):
+    db_options = {"ssl_mode": ssl_mode}
 
 DATABASES = {
     "default": {
